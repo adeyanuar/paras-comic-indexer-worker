@@ -2,5 +2,18 @@
   "name": "paras-comic-indexer-worker",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "amqplib": "^0.8.0",
+    "axios": "^0.21.1",
+    "cids": "^1.1.7",
+    "dotenv": "^10.0.0",
+    "mongodb": "^4.1.0"
+  },
+  "devDependencies": {
+    "mocha": "^9.0.3"
+  }
 }

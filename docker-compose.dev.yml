@@ -2,7 +2,7 @@ version: '2'
 
 services:
   rabbitmq:
-    image: rabbitmq:3.9.3
+    image: rabbitmq:3.9.3-management
     container_name: 'rabbitmq'
     ports:
       - 5672:5672
@@ -10,6 +10,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - rabbitmq_log:/var/log/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
   mongodb-sharded:
     image: docker.io/bitnami/mongodb-sharded:4.4
