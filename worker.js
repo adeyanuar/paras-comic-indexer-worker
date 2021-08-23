@@ -11,6 +11,9 @@ const MAX_RETRY = 5
 // process event transfer
 const processEvent = {
 	create_type: async (db, next, close, msg) => {
+		const session = db.client.startSession()
+		session.startTransaction()
+
 		try {
 			const payload = msg.params
 			const [comic_id, chapter_id] = payload.token_type.split('-')
@@ -33,19 +36,44 @@ const processEvent = {
 				}
 			}
 
+			// insert new token types
+			await db.root.collection('token_types').insertOne(
+				{
+					token_type: payload.token_type,
+					comic_id: comic_id,
+					chapter_id: parseInt(chapter_id),
+					metadata: metadata,
+					price: payload.price,
+				},
+				{
+					session,
+				}
+			)
+
 			// insert new chapter
-			await db.root.collection('chapters').insertOne({
-				token_type: payload.token_type,
-				comic_id: comic_id,
-				chapter_id: parseInt(chapter_id),
-				metadata: metadata,
-				price: payload.price,
-			})
+			if (metadata.comic_id && metadata.chapter_id) {
+				await db.root.collection('chapters').insertOne(
+					{
+						token_type: payload.token_type,
+						comic_id: comic_id,
+						chapter_id: parseInt(chapter_id),
+						metadata: metadata,
+						price: payload.price,
+					},
+					{
+						session,
+					}
+				)
+			}
+
+			await session.commitTransaction()
 
 			// ack
 			next()
 		} catch (err) {
 			console.error(err)
+			await session.abortTransaction()
+			session.endSession()
 			close()
 		}
 	},
@@ -73,49 +101,44 @@ const processEvent = {
 					throw new Error('[mint] unknown token reference')
 				}
 			}
-			try {
-				const [token_type, edition_id] = payload.token_id.split(':')
-				const [comic_id, chapter_id] = token_type.split('-')
 
-				// mint new token
-				await db.root.collection('tokens').insertOne(
-					{
-						token_id: payload.token_id,
-						comic_id: comic_id,
-						chapter_id: parseInt(chapter_id),
-						edition_id: parseInt(edition_id),
-						metadata: metadata,
-						owner_id: payload.owner_id,
-					},
-					{
-						session,
-					}
-				)
-				// add user access to chapter
-				await db.root.collection('access').findOneAndUpdate(
-					{
-						account_id: payload.owner_id,
-						comic_id: comic_id,
-						chapter_id: parseInt(chapter_id),
-					},
-					{
-						$push: {
-							access_tokens: payload.token_id,
-						},
-					},
-					{
-						upsert: true,
-						session,
-					}
-				)
+			const [token_type, edition_id] = payload.token_id.split(':')
+			const [comic_id, chapter_id] = token_type.split('-')
 
-				await session.commitTransaction()
-			} catch (err) {
-				console.log(`[mint] error: ${JSON.stringify(err)}`)
-				await session.abortTransaction()
-			} finally {
-				session.endSession()
-			}
+			// mint new token
+			await db.root.collection('tokens').insertOne(
+				{
+					token_id: payload.token_id,
+					token_type: token_type,
+					comic_id: comic_id,
+					chapter_id: parseInt(chapter_id),
+					edition_id: parseInt(edition_id),
+					metadata: metadata,
+					owner_id: payload.owner_id,
+				},
+				{
+					session,
+				}
+			)
+			// add user access to chapter
+			await db.root.collection('access').findOneAndUpdate(
+				{
+					account_id: payload.owner_id,
+					comic_id: comic_id,
+					chapter_id: parseInt(chapter_id),
+				},
+				{
+					$push: {
+						access_tokens: payload.token_id,
+					},
+				},
+				{
+					upsert: true,
+					session,
+				}
+			)
+
+			await session.commitTransaction()
 
 			// ack
 			next()
@@ -132,76 +155,68 @@ const processEvent = {
 
 		try {
 			const payload = msg.params
-			try {
-				const [token_type, edition_id] = payload.token_id.split(':')
-				const [comic_id, chapter_id] = token_type.split('-')
+			const [token_type, edition_id] = payload.token_id.split(':')
+			const [comic_id, chapter_id] = token_type.split('-')
 
-				// update token ownership
-				const result = await db.root.collection('tokens').findOneAndUpdate(
-					{
-						token_id: payload.token_id,
-						owner_id: payload.sender_id,
+			// update token ownership
+			const result = await db.root.collection('tokens').findOneAndUpdate(
+				{
+					token_id: payload.token_id,
+					owner_id: payload.sender_id,
+				},
+				{
+					$set: {
+						owner_id: payload.receiver_id,
 					},
-					{
-						$set: {
-							owner_id: payload.receiver_id,
-						},
-					},
-					{
-						session,
-					}
-				)
-				// token not found
-				if (!result.value) {
-					throw new Error('token_id not found')
+				},
+				{
+					session,
 				}
-				// remove chapter access from sender
-				await db.root.collection('access').findOneAndUpdate(
-					{
-						account_id: payload.sender_id,
-						comic_id: comic_id,
-						chapter_id: parseInt(chapter_id),
-					},
-					{
-						$pull: {
-							access_tokens: payload.token_id,
-						},
-					},
-					{
-						session,
-					}
-				)
-				// add chapter access to receiver
-				await db.root.collection('access').findOneAndUpdate(
-					{
-						account_id: payload.receiver_id,
-						comic_id: comic_id,
-						chapter_id: parseInt(chapter_id),
-					},
-					{
-						$push: {
-							access_tokens: payload.token_id,
-						},
-					},
-					{
-						upsert: true,
-						session,
-					}
-				)
-
-				await session.commitTransaction()
-			} catch (err) {
-				console.log(`[transfer] error: ${err.message}`)
-				await session.abortTransaction()
-			} finally {
-				session.endSession()
+			)
+			// token not found
+			if (!result.value) {
+				throw new Error('token_id not found')
 			}
+			// remove chapter access from sender
+			await db.root.collection('access').findOneAndUpdate(
+				{
+					account_id: payload.sender_id,
+					comic_id: comic_id,
+					chapter_id: parseInt(chapter_id),
+				},
+				{
+					$pull: {
+						access_tokens: payload.token_id,
+					},
+				},
+				{
+					session,
+				}
+			)
+			// add chapter access to receiver
+			await db.root.collection('access').findOneAndUpdate(
+				{
+					account_id: payload.receiver_id,
+					comic_id: comic_id,
+					chapter_id: parseInt(chapter_id),
+				},
+				{
+					$push: {
+						access_tokens: payload.token_id,
+					},
+				},
+				{
+					upsert: true,
+					session,
+				}
+			)
 
-			// ack
+			await session.commitTransaction()
 			next()
 		} catch (err) {
-			console.error(err)
+			console.log(`[transfer] error: ${err.message}`)
 			await session.abortTransaction()
+		} finally {
 			session.endSession()
 			close()
 		}
