@@ -66,6 +66,22 @@ const processEvent = {
 				)
 			}
 
+			// add activity
+			await db.root.collection('activites').insertOne(
+				{
+					type: 'create_type',
+					from: null,
+					to: null,
+					token_id: null,
+					amount: null,
+					issued_at: metadata.issued_at,
+					msg: msg,
+				},
+				{
+					session,
+				}
+			)
+
 			await session.commitTransaction()
 
 			// ack
@@ -134,6 +150,21 @@ const processEvent = {
 				},
 				{
 					upsert: true,
+					session,
+				}
+			)
+			// add activity
+			await db.root.collection('activites').insertOne(
+				{
+					type: 'mint',
+					from: null,
+					to: payload.owner_id,
+					token_id: payload.token_id,
+					amount: null,
+					issued_at: metadata.issued_at,
+					msg: msg,
+				},
+				{
 					session,
 				}
 			)
@@ -207,6 +238,21 @@ const processEvent = {
 				},
 				{
 					upsert: true,
+					session,
+				}
+			)
+			// add activity
+			await db.root.collection('activites').insertOne(
+				{
+					type: 'transfer',
+					from: payload.sender_id,
+					to: payload.receiver_id,
+					token_id: payload.token_id,
+					amount: null,
+					issued_at: msg.datetime,
+					msg: msg,
+				},
+				{
 					session,
 				}
 			)
