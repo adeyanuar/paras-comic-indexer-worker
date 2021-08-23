@@ -83,14 +83,13 @@ const processEvent = {
 			)
 
 			await session.commitTransaction()
-
-			// ack
 			next()
 		} catch (err) {
-			console.error(err)
+			console.log(`[create_type] error: ${err.message}`)
 			await session.abortTransaction()
-			session.endSession()
 			close()
+		} finally {
+			session.endSession()
 		}
 	},
 	mint: async (db, next, close, msg) => {
@@ -170,14 +169,13 @@ const processEvent = {
 			)
 
 			await session.commitTransaction()
-
-			// ack
 			next()
 		} catch (err) {
-			console.error(err)
+			console.log(`[mint] error: ${err.message}`)
 			await session.abortTransaction()
-			session.endSession()
 			close()
+		} finally {
+			session.endSession()
 		}
 	},
 	transfer: async (db, next, close, msg) => {
@@ -262,9 +260,9 @@ const processEvent = {
 		} catch (err) {
 			console.log(`[transfer] error: ${err.message}`)
 			await session.abortTransaction()
+			close()
 		} finally {
 			session.endSession()
-			close()
 		}
 	},
 }
