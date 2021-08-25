@@ -4,7 +4,7 @@ const { default: axios } = require('axios')
 const CID = require('cids')
 const Database = require('./helpers/Database')
 
-const QUEUE_NAME = 'nft_contract'
+const QUEUE_NAME = process.env.QUEUE_NAME || 'nft_contract'
 const MAX_RETRY = 5
 
 // process event create_type
