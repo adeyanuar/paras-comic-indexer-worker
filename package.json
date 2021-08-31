@@ -12,7 +12,8 @@
     "axios": "^0.21.1",
     "cids": "^1.1.7",
     "dotenv": "^10.0.0",
-    "mongodb": "^4.1.0"
+    "mongodb": "^4.1.0",
+    "near-api-js": "^0.42.0"
   },
   "devDependencies": {
     "mocha": "^9.0.3"

@@ -1,4 +1,4 @@
-const { MongoClient, Logger } = require('mongodb')
+const { MongoClient, Logger, Decimal128 } = require('mongodb')
 
 class Database {
 	constructor() {
@@ -21,6 +21,10 @@ class Database {
 		} catch (err) {
 			console.log(err)
 		}
+	}
+
+	toDecimal128(x) {
+		return Decimal128.fromString(x)
 	}
 }
 

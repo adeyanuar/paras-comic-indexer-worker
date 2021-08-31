@@ -1,0 +1,5 @@
+{
+    "networkId": "testnet",
+    "nodeUrl": "https://rpc.testnet.near.org",
+    "contractName": "paras-main-v1.testnet"
+}

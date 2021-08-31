@@ -1,7 +1,7 @@
 require('dotenv').config()
 const amqp = require('amqplib')
 const Database = require('../helpers/Database')
-const worker = require('../workerV2')
+const worker = require('../workerV3')
 
 const QUEUE_NAME = process.env.QUEUE_NAME
 
@@ -15,31 +15,33 @@ const sleep = (n) => {
 
 const createType = async (channel, db) => {
 	const data = {
-		contract_id: 'comic6.test.near',
-		datetime: new Date().getTime(),
+		contract_id: 'comic.test.near',
+		block_height: 100605,
+		datetime: '2021-08-30T16:43:35.394426387+00:00',
 		event_type: 'nft_create_series',
 		params: {
-			token_series_id: '373',
+			token_series_id: '1',
 			token_metadata: {
-				title: 'Coin',
+				title: 'Naruto Shippuden ch.2: Menolong sasuke',
 				description: null,
-				media: 'QmRN7WTEPwn1TaueZUkWkcubmRYDnNMyKUBL69hdBNzNPV',
+				media: 'bafybeidzcan4nzcz7sczs4yzyxly4galgygnbjewipj6haco4kffoqpkiy',
 				media_hash: null,
-				copies: null,
+				copies: 100,
 				issued_at: null,
 				expires_at: null,
 				starts_at: null,
 				updated_at: null,
 				extra: null,
 				reference:
-					'bafybeibcb6yfzcutu4caihsyjfujdd2makxsrids47kf2jw6rs3ywdtjem',
+					'bafybeicg4ss7qh5odijfn2eogizuxkrdh3zlv4eftcmgnljwu7dm64uwji',
 				reference_hash: null,
 			},
-			creator_id: 'awra.near',
-			price: null,
-			royalty: {},
+			creator_id: 'alice.test.near',
+			price: '1000000000000000000000000',
+			royalty: { 'alice.test.near': 1000 },
 		},
 	}
+
 	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
 	await sleep(500)
 	const payload = data.params
@@ -55,11 +57,13 @@ const createType = async (channel, db) => {
 
 const mint = async (channel, db) => {
 	const data = {
-		contract_id: 'comic6.test.near',
-		datetime: new Date().getTime(),
+		contract_id: 'comic.test.near',
+		block_height: 101050,
+		datetime: '2021-08-30T16:48:05.930941028+00:00',
 		event_type: 'nft_transfer',
-		params: { token_id: '373:120', sender_id: '', receiver_id: 'iis.near' },
+		params: { token_id: '1:1', sender_id: '', receiver_id: 'comic.test.near' },
 	}
+
 	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
 	await sleep(500)
 	const payload = data.params
@@ -76,15 +80,17 @@ const mint = async (channel, db) => {
 
 const transfer = async (channel, db) => {
 	const data = {
-		contract_id: 'comic6.test.near',
-		datetime: new Date().getTime(),
+		contract_id: 'comic.test.near',
+		block_height: 101348,
+		datetime: '2021-08-30T16:51:07.269463547+00:00',
 		event_type: 'nft_transfer',
 		params: {
-			token_id: '373:120',
-			sender_id: 'iis.near',
-			receiver_id: 'bambang.near',
+			token_id: '1:1',
+			sender_id: 'comic.test.near',
+			receiver_id: 'comic1.test.near',
 		},
 	}
+
 	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
 	await sleep(500)
 	const payload = data.params
@@ -101,15 +107,13 @@ const transfer = async (channel, db) => {
 
 const burn = async (channel, db) => {
 	const data = {
-		contract_id: 'comic6.test.near',
-		datetime: new Date().getTime(),
+		contract_id: 'comic.test.near',
+		block_height: 101148,
+		datetime: '2021-08-30T16:49:05.630943005+00:00',
 		event_type: 'nft_transfer',
-		params: {
-			token_id: '373:120',
-			sender_id: 'bambang.near',
-			receiver_id: '',
-		},
+		params: { token_id: '1:1', sender_id: 'comic1.test.near', receiver_id: '' },
 	}
+
 	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
 	await sleep(500)
 	const payload = data.params
@@ -120,6 +124,48 @@ const burn = async (channel, db) => {
 		console.log(`\x1b[32m`, `burn success`, `\x1b[0m`)
 	} else {
 		console.log(`\x1b[31m`, `burn failed`, `\x1b[0m`)
+	}
+}
+
+const setSeriesPrice = async (channel, db) => {
+	const data = {
+		contract_id: 'comic.test.near',
+		block_height: 100745,
+		datetime: '2021-08-30T16:45:00.522770328+00:00',
+		event_type: 'nft_set_series_price',
+		params: { token_series_id: '1', price: '2000000000000000000000000' },
+	}
+
+	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
+	await sleep(500)
+	const result = await db.root.collection('token_series').findOne({
+		token_id: data.params.token_series_id,
+	})
+	if (result && result.price === data.params.price) {
+		console.log(`\x1b[32m`, `setSeriesPrice success`, `\x1b[0m`)
+	} else {
+		console.log(`\x1b[31m`, `setSeriesPrice failed`, `\x1b[0m`)
+	}
+}
+
+const setSeriesNonMintable = async (channel, db) => {
+	const data = {
+		contract_id: 'comic.test.near',
+		block_height: 101244,
+		datetime: '2021-08-30T16:50:03.923371541+00:00',
+		event_type: 'nft_set_series_non_mintable',
+		params: { token_series_id: '1' },
+	}
+
+	channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(data)))
+	await sleep(500)
+	const result = await db.root.collection('token_series').findOne({
+		token_id: data.params.token_series_id,
+	})
+	if (result && result.price === null && result.is_non_mintable === true) {
+		console.log(`\x1b[32m`, `setSeriesNonMintable success`, `\x1b[0m`)
+	} else {
+		console.log(`\x1b[31m`, `setSeriesNonMintable failed`, `\x1b[0m`)
 	}
 }
 

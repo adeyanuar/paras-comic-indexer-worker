@@ -1,3 +1,3 @@
-const worker = require('./workerV2')
+const worker = require('./workerV3')
 
 worker()
