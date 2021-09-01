@@ -538,6 +538,7 @@ const processEvent = {
 				{
 					$set: {
 						lowest_price: db.toDecimal128(price),
+						updated_at: new Date(msg.datetime).getTime(),
 					},
 				},
 				{
@@ -771,6 +772,7 @@ const processEvent = {
 						lowest_price: newLowestPrice
 							? db.toDecimal128(newLowestPrice)
 							: null,
+						updated_at: new Date().getTime(),
 					},
 				},
 				{
@@ -839,6 +841,22 @@ const processEvent = {
 			} = msg.params
 			const [token_series_id, edition_id] = token_id.split(':')
 
+			// update token_series
+			await db.root.collection('token_series').findOneAndUpdate(
+				{
+					contract_id: nft_contract_id,
+					token_series_id: token_series_id,
+				},
+				{
+					$set: {
+						updated_at: new Date(msg.datetime).getTime(),
+					},
+				},
+				{
+					session,
+				}
+			)
+
 			// add activity
 			await db.root.collection('activites').insertOne(
 				{
@@ -857,6 +875,8 @@ const processEvent = {
 					session,
 				}
 			)
+
+			// updated_at: new Date().getTime()
 
 			await session.commitTransaction()
 			next()
