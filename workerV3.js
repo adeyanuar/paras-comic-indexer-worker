@@ -166,27 +166,33 @@ const processEvent = {
 						session,
 					}
 				)
+				let updateParams = {
+					$inc: {
+						in_circulation: 1,
+					},
+					// if token series not found, create one
+					$setOnInsert: {
+						contract_id: contract_id,
+						token_series_id: token_series_id,
+						creator_id: null,
+						price: null,
+						is_non_mintable: true,
+						royalty: royalty,
+						metadata: metadata,
+					},
+				}
+				if (parseInt(metadata.copies) === parseInt(edition_id)) {
+					updateParams.$set = {
+						is_non_mintable: true,
+					}
+				}
 				// update series circulation
 				await db.root.collection('token_series').findOneAndUpdate(
 					{
 						contract_id: contract_id,
 						token_series_id: token_series_id,
 					},
-					{
-						$inc: {
-							in_circulation: 1,
-						},
-						// if token series not found, create one
-						$setOnInsert: {
-							contract_id: contract_id,
-							token_series_id: token_series_id,
-							creator_id: null,
-							price: null,
-							is_non_mintable: true,
-							royalty: royalty,
-							metadata: metadata,
-						},
-					},
+					updateParams,
 					{
 						upsert: true,
 						session,
