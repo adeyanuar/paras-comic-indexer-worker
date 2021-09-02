@@ -462,6 +462,72 @@ const processEvent = {
 			session.endSession()
 		}
 	},
+	nft_decrease_series_copies: async (db, next, close, msg) => {
+		const session = db.client.startSession()
+		session.startTransaction()
+
+		// const msg = {
+		// 	type: 'nft_decrease_series_copies',
+		// 	params: {
+		// 		token_series_id: token_series_id,
+		// 		copies: U64::from(token_series.metadata.copies.unwrap()),
+		// 	},
+		// }
+
+		try {
+			const contract_id = msg.contract_id
+			const { token_series_id, copies } = msg.params
+
+			const result = await db.root.collection('token_series').findOneAndUpdate(
+				{
+					contract_id: contract_id,
+					token_series_id: token_series_id,
+				},
+				{
+					$set: {
+						'metadata.copies': copies,
+					},
+				},
+				{
+					session,
+				}
+			)
+
+			// token not found
+			if (!result.value) {
+				throw new Error(
+					'[nft_decrease_series_copies] token_series_id not found'
+				)
+			}
+
+			// add activity
+			await db.root.collection('activites').insertOne(
+				{
+					contract_id: contract_id,
+					type: 'nft_decrease_series_copies',
+					from: null,
+					to: null,
+					token_id: null,
+					token_series_id: token_series_id,
+					price: null,
+					issued_at: new Date(msg.datetime).getTime(),
+					msg: msg,
+				},
+				{
+					session,
+				}
+			)
+
+			await session.commitTransaction()
+			next()
+		} catch (err) {
+			console.log(`[nft_set_series_non_mintable] error: ${err.message}`)
+			await session.abortTransaction()
+			close()
+		} finally {
+			session.endSession()
+		}
+	},
 	add_market_data: async (db, next, close, msg) => {
 		const session = db.client.startSession()
 		session.startTransaction()
