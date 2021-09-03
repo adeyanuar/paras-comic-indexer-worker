@@ -217,11 +217,14 @@ const processEvent = {
 					{
 						contract_id: contract_id,
 						type: 'nft_transfer',
-						from: null,
+						from: payload.price
+							? tokenSeriesExist.metadata.creator_id ||
+							  tokenSeriesExist.contract_id
+							: null,
 						to: payload.receiver_id,
 						token_id: payload.token_id,
 						token_series_id: token_series_id,
-						price: db.toDecimal128(payload.price),
+						price: payload.price ? db.toDecimal128(payload.price) : null,
 						issued_at: new Date(msg.datetime).getTime(),
 						msg: msg,
 					},
