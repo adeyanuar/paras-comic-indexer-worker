@@ -166,38 +166,53 @@ const processEvent = {
 						session,
 					}
 				)
-				let updateParams = {
-					$inc: {
-						in_circulation: 1,
-					},
-					// if token series not found, create one
-					$setOnInsert: {
+				const tokenSeriesExist = await db.root
+					.collection('token_series')
+					.findOne({
 						contract_id: contract_id,
 						token_series_id: token_series_id,
-						creator_id: null,
-						price: null,
-						is_non_mintable: true,
-						royalty: royalty,
-						metadata: metadata,
-					},
-				}
-				if (parseInt(metadata.copies) === parseInt(edition_id)) {
-					updateParams.$set = {
-						is_non_mintable: true,
+					})
+
+				if (tokenSeriesExist) {
+					let updateParams = {
+						$inc: {
+							in_circulation: 1,
+						},
 					}
-				}
-				// update series circulation
-				await db.root.collection('token_series').findOneAndUpdate(
-					{
-						contract_id: contract_id,
-						token_series_id: token_series_id,
-					},
-					updateParams,
-					{
-						upsert: true,
-						session,
+					if (parseInt(metadata.copies) === parseInt(edition_id)) {
+						updateParams.$set = {
+							is_non_mintable: true,
+						}
 					}
-				)
+					// update series circulation
+					await db.root.collection('token_series').findOneAndUpdate(
+						{
+							contract_id: contract_id,
+							token_series_id: token_series_id,
+						},
+						updateParams,
+						{
+							session,
+						}
+					)
+				} else {
+					// add new series circulation
+					await db.root.collection('token_series').insertOne(
+						{
+							contract_id: contract_id,
+							token_series_id: token_series_id,
+							creator_id: null,
+							price: null,
+							is_non_mintable: true,
+							royalty: royalty,
+							metadata: metadata,
+						},
+						{
+							session,
+						}
+					)
+				}
+
 				// add activity
 				await db.root.collection('activites').insertOne(
 					{
