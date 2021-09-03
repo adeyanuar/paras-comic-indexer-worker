@@ -221,7 +221,7 @@ const processEvent = {
 						to: payload.receiver_id,
 						token_id: payload.token_id,
 						token_series_id: token_series_id,
-						price: null,
+						price: payload.price,
 						issued_at: new Date(msg.datetime).getTime(),
 						msg: msg,
 					},
