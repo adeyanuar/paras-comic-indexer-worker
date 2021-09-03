@@ -136,7 +136,6 @@ const processEvent = {
 							}
 							return _metadata
 						} catch (err) {
-							bail(new Error('hehe'))
 							console.log(err)
 							throw new Error('Try again...')
 						}
