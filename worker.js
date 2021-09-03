@@ -67,7 +67,7 @@ const processEvent = {
 			}
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					type: 'create_type',
 					from: null,
@@ -154,7 +154,7 @@ const processEvent = {
 				}
 			)
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					type: 'mint',
 					from: null,
@@ -242,7 +242,7 @@ const processEvent = {
 				}
 			)
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					type: 'transfer',
 					from: payload.sender_id,

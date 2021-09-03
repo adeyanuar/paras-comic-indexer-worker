@@ -79,7 +79,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: contract_id,
 					type: 'nft_create_series',
@@ -213,7 +213,7 @@ const processEvent = {
 				}
 
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						contract_id: contract_id,
 						type: 'nft_transfer',
@@ -273,7 +273,7 @@ const processEvent = {
 				)
 
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						contract_id: contract_id,
 						type: 'nft_transfer',
@@ -317,7 +317,7 @@ const processEvent = {
 				}
 
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						contract_id: contract_id,
 						type: 'nft_transfer',
@@ -377,7 +377,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: contract_id,
 					type: 'nft_set_series_price',
@@ -449,7 +449,7 @@ const processEvent = {
 			}
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: contract_id,
 					type: 'nft_set_series_non_mintable',
@@ -515,7 +515,7 @@ const processEvent = {
 			}
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: contract_id,
 					type: 'nft_decrease_series_copies',
@@ -627,7 +627,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: nft_contract_id,
 					type: 'add_market_data',
@@ -741,7 +741,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: nft_contract_id,
 					type: 'delete_market_data',
@@ -861,7 +861,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: nft_contract_id,
 					type: 'update_market_data',
@@ -938,7 +938,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: nft_contract_id,
 					type: 'resolve_purchase',
@@ -1017,7 +1017,7 @@ const processEvent = {
 			}
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					contract_id: nft_contract_id,
 					type: 'resolve_purchase_fail',

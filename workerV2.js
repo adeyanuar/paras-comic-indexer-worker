@@ -69,7 +69,7 @@ const processEvent = {
 			)
 
 			// add activity
-			await db.root.collection('activites').insertOne(
+			await db.root.collection('activities').insertOne(
 				{
 					type: 'nft_create_series',
 					from: null,
@@ -137,7 +137,7 @@ const processEvent = {
 					}
 				)
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						type: 'nft_transfer',
 						from: null,
@@ -176,7 +176,7 @@ const processEvent = {
 				}
 
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						type: 'nft_transfer',
 						from: payload.sender_id,
@@ -215,7 +215,7 @@ const processEvent = {
 				}
 
 				// add activity
-				await db.root.collection('activites').insertOne(
+				await db.root.collection('activities').insertOne(
 					{
 						type: 'nft_transfer',
 						from: payload.sender_id,
