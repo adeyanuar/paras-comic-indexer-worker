@@ -72,6 +72,7 @@ const processEvent = {
 					royalty: payload.royalty,
 					metadata: metadata,
 					in_circulation: 0,
+					updated_at: new Date(msg.datetime).getTime(),
 				},
 				{
 					session,
@@ -181,6 +182,15 @@ const processEvent = {
 					if (parseInt(metadata.copies) === parseInt(edition_id)) {
 						updateParams.$set = {
 							is_non_mintable: true,
+						}
+					}
+					if (payload.price) {
+						if (updateParams.$set) {
+							updateParams.$set.updated_at = new Date(msg.datetime).getTime()
+						} else {
+							updateParams.$set = {
+								updated_at: new Date(msg.datetime).getTime(),
+							}
 						}
 					}
 					// update series circulation
