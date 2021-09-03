@@ -88,7 +88,7 @@ const processEvent = {
 					token_id: null,
 					token_series_id: payload.token_series_id,
 					price: null,
-					issued_at: metadata.issued_at,
+					issued_at: new Date(msg.datetime).getTime(),
 					msg: msg,
 				},
 				{
@@ -222,7 +222,7 @@ const processEvent = {
 						token_id: payload.token_id,
 						token_series_id: token_series_id,
 						price: null,
-						issued_at: metadata.issued_at,
+						issued_at: new Date(msg.datetime).getTime(),
 						msg: msg,
 					},
 					{
