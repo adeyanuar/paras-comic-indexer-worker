@@ -374,6 +374,8 @@ const processEvent = {
 			const contract_id = msg.contract_id
 			const { token_series_id, price } = msg.params
 
+			const parsedPrice = price ? db.toDecimal128(price) : null
+
 			const result = await db.root.collection('token_series').findOneAndUpdate(
 				{
 					contract_id: contract_id,
@@ -381,7 +383,7 @@ const processEvent = {
 				},
 				{
 					$set: {
-						price: db.toDecimal128(price),
+						price: parsedPrice,
 					},
 				},
 				{
@@ -398,7 +400,7 @@ const processEvent = {
 					to: null,
 					token_id: null,
 					token_series_id: token_series_id,
-					price: db.toDecimal128(price),
+					price: parsedPrice,
 					issued_at: new Date(msg.datetime).getTime(),
 					msg: msg,
 				},
