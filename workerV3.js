@@ -992,7 +992,7 @@ const processQueue = async (db, next, close, msg) => {
 						formatEvent
 					)}`
 				)
-				processEvent[formatEvent.event_type](database, session, formatEvent)
+				processEvent[formatEvent.event_type](db, session, formatEvent)
 			}
 		}
 
@@ -1081,7 +1081,7 @@ const main = async (n) => {
 		(msg) => {
 			const parsedMsg = JSON.parse(msg.content.toString())
 			const next = () => {
-				console.log(' [x] Successfully indexed %s', parsedMsg.event_type)
+				console.log(' [x] Successfully indexed %s', parsedMsg.block_height)
 				channel.ack(msg)
 			}
 			const close = () => conn.close()
