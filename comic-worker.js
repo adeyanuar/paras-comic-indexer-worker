@@ -256,6 +256,9 @@ const processEvent = {
 }
 
 const processQueue = async (db, next, close, msg) => {
+	const session = db.client.startSession()
+	session.startTransaction()
+
 	try {
 		for await (const event of msg.events) {
 			const formatEvent = {
@@ -272,7 +275,7 @@ const processQueue = async (db, next, close, msg) => {
 						formatEvent
 					)}`
 				)
-				processEvent[formatEvent.event_type](db, session, formatEvent)
+				await processEvent[formatEvent.event_type](db, session, formatEvent)
 			}
 		}
 

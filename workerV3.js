@@ -48,6 +48,7 @@ const processEvent = {
 								...resp.data,
 							}
 						} catch (err) {
+							console.log(`Try again`)
 							console.log(err)
 							throw new Error('Try again...')
 						}
@@ -125,6 +126,7 @@ const processEvent = {
 							}
 							return _metadata
 						} catch (err) {
+							console.log(`Try again`)
 							console.log(err)
 							throw new Error('Try again...')
 						}
@@ -992,7 +994,7 @@ const processQueue = async (db, next, close, msg) => {
 						formatEvent
 					)}`
 				)
-				processEvent[formatEvent.event_type](db, session, formatEvent)
+				await processEvent[formatEvent.event_type](db, session, formatEvent)
 			}
 		}
 
