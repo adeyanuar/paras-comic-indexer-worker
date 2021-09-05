@@ -22,10 +22,7 @@ const MAX_RETRY = 5
 // process event create_type
 // process event transfer
 const processEvent = {
-	nft_create_series: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	nft_create_series: async (db, session, msg) => {
 		try {
 			const contract_id = msg.contract_id
 			const payload = msg.params
@@ -51,6 +48,7 @@ const processEvent = {
 								...resp.data,
 							}
 						} catch (err) {
+							console.log(`Try again`)
 							console.log(err)
 							throw new Error('Try again...')
 						}
@@ -96,21 +94,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[nft_create_series] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	nft_transfer: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	nft_transfer: async (db, session, msg) => {
 		const contract_id = msg.contract_id
 
 		try {
@@ -137,6 +126,7 @@ const processEvent = {
 							}
 							return _metadata
 						} catch (err) {
+							console.log(`Try again`)
 							console.log(err)
 							throw new Error('Try again...')
 						}
@@ -347,21 +337,12 @@ const processEvent = {
 					}
 				)
 			}
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[nft_transfer] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	nft_set_series_price: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	nft_set_series_price: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'comic.test.near',
 		// 	block_height: 100745,
@@ -413,21 +394,12 @@ const processEvent = {
 			if (!result.value) {
 				throw new Error('[nft_set_series_price] token_series_id not found')
 			}
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[nft_set_series_price] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	nft_set_series_non_mintable: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	nft_set_series_non_mintable: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'comic.test.near',
 		// 	block_height: 101244,
@@ -480,21 +452,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[nft_set_series_non_mintable] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	nft_decrease_series_copies: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	nft_decrease_series_copies: async (db, session, msg) => {
 		// const msg = {
 		// 	type: 'nft_decrease_series_copies',
 		// 	params: {
@@ -546,21 +509,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[nft_set_series_non_mintable] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	add_market_data: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	add_market_data: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'marketplace.test.near',
 		// 	block_height: 105604,
@@ -659,21 +613,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[add_market_data] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	delete_market_data: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	delete_market_data: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'marketplace.test.near',
 		// 	block_height: 105785,
@@ -773,21 +718,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[delete_market_data] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	update_market_data: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	update_market_data: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'marketplace.test.near',
 		// 	block_height: 105604,
@@ -893,21 +829,12 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[update_market_data] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	resolve_purchase: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	resolve_purchase: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'marketplace.test.near',
 		// 	block_height: 107075,
@@ -972,21 +899,12 @@ const processEvent = {
 			)
 
 			// updated_at: new Date().getTime()
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[resolve_purchase] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
-	resolve_purchase_fail: async (db, next, close, msg) => {
-		const session = db.client.startSession()
-		session.startTransaction()
-
+	resolve_purchase_fail: async (db, session, msg) => {
 		// const msg = {
 		// 	contract_id: 'marketplace.test.near',
 		// 	block_height: 107075,
@@ -1049,17 +967,50 @@ const processEvent = {
 					session,
 				}
 			)
-
-			await session.commitTransaction()
-			next()
 		} catch (err) {
 			console.log(`[resolve_purchase] error: ${err.message}`)
-			await session.abortTransaction()
-			close()
-		} finally {
-			session.endSession()
+			throw err
 		}
 	},
+}
+
+const processQueue = async (db, next, close, msg) => {
+	const session = db.client.startSession()
+	session.startTransaction()
+
+	try {
+		for await (const event of msg.events) {
+			const formatEvent = {
+				contract_id: event.contract_id,
+				block_height: msg.block_height,
+				datetime: msg.datetime,
+				event_type: event.event_type,
+				params: event.params,
+			}
+
+			if (processEvent[formatEvent.event_type]) {
+				console.log(
+					`[${formatEvent.event_type}] processing ${JSON.stringify(
+						formatEvent
+					)}`
+				)
+				await processEvent[formatEvent.event_type](db, session, formatEvent)
+			}
+		}
+
+		await session.commitTransaction()
+		next()
+	} catch (err) {
+		console.log(
+			`${new Date().toISOString()} [queue::${msg.block_height}] error: ${
+				err.message
+			}`
+		)
+		await session.abortTransaction()
+		close()
+	} finally {
+		session.endSession()
+	}
 }
 
 let getToken = () => {}
@@ -1132,18 +1083,13 @@ const main = async (n) => {
 		(msg) => {
 			const parsedMsg = JSON.parse(msg.content.toString())
 			const next = () => {
-				console.log(' [x] Successfully indexed %s', parsedMsg.event_type)
+				console.log(' [x] Successfully indexed %s', parsedMsg.block_height)
 				channel.ack(msg)
 			}
 			const close = () => conn.close()
 			console.log('======')
-			console.log(' [x] Received %s', parsedMsg.event_type)
-			if (processEvent[parsedMsg.event_type]) {
-				console.log(
-					`[${parsedMsg.event_type}] processing ${JSON.stringify(parsedMsg)}`
-				)
-				processEvent[parsedMsg.event_type](database, next, close, parsedMsg)
-			}
+			console.log(' [x] Received %s', parsedMsg.block_height)
+			processQueue(database, next, close, parsedMsg)
 		},
 		{ noAck: false }
 	)
