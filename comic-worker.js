@@ -367,7 +367,7 @@ const main = async (n) => {
 			const close = () => conn.close()
 			console.log('======')
 			console.log(' [x] Received %s', parsedMsg.block_height)
-			processQueue(db, next, close, parsedMsg)
+			processQueue(database, next, close, parsedMsg)
 		},
 		{ noAck: false }
 	)
