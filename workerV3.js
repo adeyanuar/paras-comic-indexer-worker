@@ -470,7 +470,7 @@ const processEvent = {
 
 		try {
 			const contract_id = msg.contract_id
-			const { token_series_id, copies } = msg.params
+			const { token_series_id, copies, is_non_mintable } = msg.params
 
 			const result = await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -480,6 +480,7 @@ const processEvent = {
 				{
 					$set: {
 						'metadata.copies': copies,
+						is_non_mintable: is_non_mintable,
 					},
 				},
 				{
