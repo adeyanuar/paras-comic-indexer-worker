@@ -167,6 +167,7 @@ const processEvent = {
 					let updateParams = {
 						$inc: {
 							in_circulation: 1,
+							total_mint: 1,
 						},
 					}
 					if (parseInt(metadata.copies) === parseInt(edition_id)) {
@@ -203,6 +204,7 @@ const processEvent = {
 							creator_id: null,
 							price: null,
 							is_non_mintable: true,
+							total_mint: 1,
 							royalty: royalty,
 							metadata: metadata,
 						},
@@ -975,6 +977,14 @@ const processEvent = {
 }
 
 const processQueue = async (db, next, close, msg) => {
+	if (process.env.FIRST_BLOCK_HEIGHT) {
+		const firstBlockHeight = parseInt(process.env.FIRST_BLOCK_HEIGHT)
+		const currBlockHeight = parseInt(db.block_height)
+		if (firstBlockHeight > currBlockHeight) {
+			next()
+		}
+	}
+
 	const session = db.client.startSession()
 	session.startTransaction()
 
