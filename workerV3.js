@@ -167,6 +167,7 @@ const processEvent = {
 					let updateParams = {
 						$inc: {
 							in_circulation: 1,
+							total_mint: 1,
 						},
 					}
 					if (parseInt(metadata.copies) === parseInt(edition_id)) {
@@ -203,6 +204,7 @@ const processEvent = {
 							creator_id: null,
 							price: null,
 							is_non_mintable: true,
+							total_mint: 1,
 							royalty: royalty,
 							metadata: metadata,
 						},
@@ -468,7 +470,7 @@ const processEvent = {
 
 		try {
 			const contract_id = msg.contract_id
-			const { token_series_id, copies } = msg.params
+			const { token_series_id, copies, is_non_mintable } = msg.params
 
 			const result = await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -478,6 +480,7 @@ const processEvent = {
 				{
 					$set: {
 						'metadata.copies': copies,
+						is_non_mintable: is_non_mintable,
 					},
 				},
 				{
@@ -975,6 +978,14 @@ const processEvent = {
 }
 
 const processQueue = async (db, next, close, msg) => {
+	if (process.env.FIRST_BLOCK_HEIGHT) {
+		const firstBlockHeight = parseInt(process.env.FIRST_BLOCK_HEIGHT)
+		const currBlockHeight = parseInt(db.block_height)
+		if (firstBlockHeight > currBlockHeight) {
+			next()
+		}
+	}
+
 	const session = db.client.startSession()
 	session.startTransaction()
 
