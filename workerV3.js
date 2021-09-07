@@ -371,16 +371,20 @@ const processEvent = {
 				contract_id: contract_id,
 				token_series_id: token_series_id,
 			})
-			const primaryPrice = tokenSeries.price.toString()
 
-			const newLowestPrice = secondaryLowestPrice
-				? JSBI.lessThan(
-						JSBI.BigInt(primaryPrice),
-						JSBI.BigInt(secondaryLowestPrice)
-				  )
-					? primaryPrice
-					: secondaryLowestPrice
-				: primaryPrice
+			const primaryPrice = tokenSeries.price
+				? tokenSeries.price.toString()
+				: null
+
+			const newLowestPrice =
+				secondaryLowestPrice && primaryPrice
+					? JSBI.lessThan(
+							JSBI.BigInt(primaryPrice),
+							JSBI.BigInt(secondaryLowestPrice)
+					  )
+						? primaryPrice
+						: secondaryLowestPrice
+					: primaryPrice
 
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
