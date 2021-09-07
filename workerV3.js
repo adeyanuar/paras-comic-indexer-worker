@@ -67,6 +67,7 @@ const processEvent = {
 					token_series_id: payload.token_series_id,
 					creator_id: payload.creator_id,
 					price: payload.price,
+					lowest_price: db.toDecimal128(payload.price),
 					royalty: payload.royalty,
 					metadata: metadata,
 					in_circulation: 0,
@@ -494,6 +495,21 @@ const processEvent = {
 					'[nft_decrease_series_copies] token_series_id not found'
 				)
 			}
+
+			const result = await db.root.collection('tokens').updateMany(
+				{
+					contract_id: contract_id,
+					token_series_id: token_series_id,
+				},
+				{
+					$set: {
+						'metadata.copies': copies,
+					},
+				},
+				{
+					session,
+				}
+			)
 
 			// add activity
 			await db.root.collection('activities').insertOne(
