@@ -387,7 +387,7 @@ const processEvent = {
 					  )
 						? primaryPrice
 						: secondaryLowestPrice
-					: primaryPrice
+					: primaryPrice || secondaryLowestPrice
 
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -455,8 +455,9 @@ const processEvent = {
 					  )
 						? primaryPrice
 						: secondaryLowestPrice
-					: primaryPrice
+					: primaryPrice || secondaryLowestPrice
 
+			console.log(newLowestPrice)
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -808,14 +809,15 @@ const processEvent = {
 				? tokenSeries.price.toString()
 				: null
 
-			const newLowestPrice = secondaryLowestPrice
-				? JSBI.lessThan(
-						JSBI.BigInt(primaryPrice),
-						JSBI.BigInt(secondaryLowestPrice)
-				  )
-					? primaryPrice
-					: secondaryLowestPrice
-				: primaryPrice
+			const newLowestPrice =
+				primaryPrice && secondaryLowestPrice
+					? JSBI.lessThan(
+							JSBI.BigInt(primaryPrice),
+							JSBI.BigInt(secondaryLowestPrice)
+					  )
+						? primaryPrice
+						: secondaryLowestPrice
+					: primaryPrice || secondaryLowestPrice
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -941,7 +943,7 @@ const processEvent = {
 					  )
 						? primaryPrice
 						: secondaryLowestPrice
-					: primaryPrice
+					: primaryPrice || secondaryLowestPrice
 
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
