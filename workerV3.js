@@ -360,16 +360,44 @@ const processEvent = {
 
 			const parsedPrice = price ? db.toDecimal128(price) : null
 
+			// get new lowest price
+			const query = {
+				contract_id: contract_id,
+				token_series_id: token_series_id,
+				price: {
+					$ne: null,
+					$lt: parsedPrice,
+				},
+			}
+			const tokensRaw = await db.root
+				.collection('tokens')
+				.find(query)
+				.sort({ price: 1 })
+				.limit(1)
+
+			const tokens = await tokensRaw.toArray()
+
+			const newLowestPrice =
+				tokens.length > 0 ? tokens[0].price.toString() : null
+
+			const updateParams = {
+				$set: {
+					price: parsedPrice,
+					updated_at: new Date(msg.datetime).getTime(),
+				},
+			}
+
+			// if it is lower than current price
+			if (!newLowestPrice) {
+				updateParams.$set.lowest_price = parsedPrice
+			}
+
 			const result = await db.root.collection('token_series').findOneAndUpdate(
 				{
 					contract_id: contract_id,
 					token_series_id: token_series_id,
 				},
-				{
-					$set: {
-						price: parsedPrice,
-					},
-				},
+				updateParams,
 				{
 					session,
 				}
@@ -496,7 +524,7 @@ const processEvent = {
 				)
 			}
 
-			const result = await db.root.collection('tokens').updateMany(
+			await db.root.collection('tokens').updateMany(
 				{
 					contract_id: contract_id,
 					token_series_id: token_series_id,
