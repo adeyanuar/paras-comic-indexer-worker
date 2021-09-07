@@ -425,15 +425,12 @@ const processEvent = {
 			const contract_id = msg.contract_id
 			const { token_series_id, price } = msg.params
 
-			const parsedPrice = price ? db.toDecimal128(price) : null
-
 			// get new lowest price
 			const query = {
 				contract_id: contract_id,
 				token_series_id: token_series_id,
 				price: {
 					$ne: null,
-					$lt: parsedPrice,
 				},
 			}
 			const tokensRaw = await db.root
@@ -444,27 +441,37 @@ const processEvent = {
 
 			const tokens = await tokensRaw.toArray()
 
-			const newLowestPrice =
+			// check lowest price from secondary market
+			const secondaryLowestPrice =
 				tokens.length > 0 ? tokens[0].price.toString() : null
 
-			const updateParams = {
-				$set: {
-					price: parsedPrice,
-					updated_at: new Date(msg.datetime).getTime(),
-				},
-			}
+			const primaryPrice = price
 
-			// if it is lower than current price
-			if (!newLowestPrice) {
-				updateParams.$set.lowest_price = parsedPrice
-			}
+			const newLowestPrice =
+				secondaryLowestPrice && primaryPrice
+					? JSBI.lessThan(
+							JSBI.BigInt(primaryPrice),
+							JSBI.BigInt(secondaryLowestPrice)
+					  )
+						? primaryPrice
+						: secondaryLowestPrice
+					: primaryPrice
 
-			const result = await db.root.collection('token_series').findOneAndUpdate(
+			// update token_series
+			await db.root.collection('token_series').findOneAndUpdate(
 				{
 					contract_id: contract_id,
 					token_series_id: token_series_id,
 				},
-				updateParams,
+				{
+					$set: {
+						price: price ? db.toDecimal128(price) : null,
+						lowest_price: newLowestPrice
+							? db.toDecimal128(newLowestPrice)
+							: null,
+						updated_at: new Date(msg.datetime).getTime(),
+					},
+				},
 				{
 					session,
 				}
@@ -479,7 +486,7 @@ const processEvent = {
 					to: null,
 					token_id: null,
 					token_series_id: token_series_id,
-					price: parsedPrice,
+					price: price ? db.toDecimal128(price) : null,
 					issued_at: new Date(msg.datetime).getTime(),
 					msg: msg,
 				},
@@ -487,11 +494,6 @@ const processEvent = {
 					session,
 				}
 			)
-
-			// token not found
-			if (!result.value) {
-				throw new Error('[nft_set_series_price] token_series_id not found')
-			}
 		} catch (err) {
 			console.log(`[nft_set_series_price] error: ${err.message}`)
 			throw err
