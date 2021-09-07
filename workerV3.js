@@ -178,6 +178,7 @@ const processEvent = {
 					if (parseInt(metadata.copies) === parseInt(edition_id)) {
 						updateParams.$set = {
 							is_non_mintable: true,
+							price: null,
 						}
 					}
 					if (payload.price) {
