@@ -158,6 +158,7 @@ const processEvent = {
 						session,
 					}
 				)
+
 				const tokenSeriesExist = await db.root
 					.collection('token_series')
 					.findOne({
@@ -341,6 +342,64 @@ const processEvent = {
 					}
 				)
 			}
+
+			// get new lowest price
+			const query = {
+				contract_id: contract_id,
+				token_series_id: token_series_id,
+				token_id: {
+					$ne: payload.token_id,
+				},
+				price: {
+					$ne: null,
+				},
+			}
+			const tokensRaw = await db.root
+				.collection('tokens')
+				.find(query)
+				.sort({ price: 1 })
+				.limit(1)
+
+			const tokens = await tokensRaw.toArray()
+
+			// check lowest price from secondary market
+			const secondaryLowestPrice =
+				tokens.length > 0 ? tokens[0].price.toString() : null
+
+			// check lowest price from primary market
+			const tokenSeries = await db.root.collection('token_series').findOne({
+				contract_id: contract_id,
+				token_series_id: token_series_id,
+			})
+			const primaryPrice = tokenSeries.price.toString()
+
+			const newLowestPrice = secondaryLowestPrice
+				? JSBI.lessThan(
+						JSBI.BigInt(primaryPrice),
+						JSBI.BigInt(secondaryLowestPrice)
+				  )
+					? primaryPrice
+					: secondaryLowestPrice
+				: primaryPrice
+
+			// update token_series
+			await db.root.collection('token_series').findOneAndUpdate(
+				{
+					contract_id: contract_id,
+					token_series_id: token_series_id,
+				},
+				{
+					$set: {
+						lowest_price: newLowestPrice
+							? db.toDecimal128(newLowestPrice)
+							: null,
+						updated_at: new Date(msg.datetime).getTime(),
+					},
+				},
+				{
+					session,
+				}
+			)
 		} catch (err) {
 			console.log(`[nft_transfer] error: ${err.message}`)
 			throw err
@@ -727,20 +786,25 @@ const processEvent = {
 
 			const tokens = await tokensRaw.toArray()
 
-			// check lowest price from tokens
-			let newLowestPrice = tokens.length > 0 ? tokens[0].price.toString() : null
+			// check lowest price from secondary market
+			const secondaryLowestPrice =
+				tokens.length > 0 ? tokens[0].price.toString() : price
 
-			// check lowest price from token series
+			// check lowest price from primary market
 			const tokenSeries = await db.root.collection('token_series').findOne({
 				contract_id: nft_contract_id,
 				token_series_id: token_series_id,
 			})
-			newLowestPrice = JSBI.lessThan(
-				JSBI.BigInt(tokenSeries.price.toString()),
-				JSBI.BigInt(newLowestPrice)
-			)
-				? tokenSeries.price.toString()
-				: newLowestPrice
+			const primaryPrice = tokenSeries.price.toString()
+
+			const newLowestPrice = secondaryLowestPrice
+				? JSBI.lessThan(
+						JSBI.BigInt(primaryPrice),
+						JSBI.BigInt(secondaryLowestPrice)
+				  )
+					? primaryPrice
+					: secondaryLowestPrice
+				: primaryPrice
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -832,9 +896,6 @@ const processEvent = {
 			const query = {
 				contract_id: nft_contract_id,
 				token_series_id: token_series_id,
-				token_id: {
-					$ne: token_id,
-				},
 				price: {
 					$ne: null,
 					$lt: db.toDecimal128(price),
@@ -848,21 +909,44 @@ const processEvent = {
 
 			const tokens = await tokensRaw.toArray()
 
-			// check lowest price from tokens
-			let newLowestPrice =
+			// check lowest price from secondary market
+			const secondaryLowestPrice =
 				tokens.length > 0 ? tokens[0].price.toString() : price
 
-			// check lowest price from token series
+			// check lowest price from primary market
 			const tokenSeries = await db.root.collection('token_series').findOne({
 				contract_id: nft_contract_id,
 				token_series_id: token_series_id,
 			})
-			newLowestPrice = JSBI.lessThan(
-				JSBI.BigInt(tokenSeries.price.toString()),
-				JSBI.BigInt(newLowestPrice)
+			const primaryPrice = tokenSeries.price.toString()
+
+			const newLowestPrice = secondaryLowestPrice
+				? JSBI.lessThan(
+						JSBI.BigInt(primaryPrice),
+						JSBI.BigInt(secondaryLowestPrice)
+				  )
+					? primaryPrice
+					: secondaryLowestPrice
+				: primaryPrice
+
+			// update token_series
+			await db.root.collection('token_series').findOneAndUpdate(
+				{
+					contract_id: nft_contract_id,
+					token_series_id: token_series_id,
+				},
+				{
+					$set: {
+						lowest_price: newLowestPrice
+							? db.toDecimal128(newLowestPrice)
+							: null,
+						updated_at: new Date(msg.datetime).getTime(),
+					},
+				},
+				{
+					session,
+				}
 			)
-				? tokenSeries.price.toString()
-				: newLowestPrice
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -935,44 +1019,6 @@ const processEvent = {
 			} = msg.params
 			const [token_series_id, edition_id] = token_id.split(':')
 
-			// get new lowest price
-			const query = {
-				contract_id: nft_contract_id,
-				token_series_id: token_series_id,
-				token_id: {
-					$ne: token_id,
-				},
-				price: {
-					$ne: null,
-					$lt: db.toDecimal128(price),
-				},
-			}
-			const tokensRaw = await db.root
-				.collection('tokens')
-				.find(query)
-				.sort({ price: 1 })
-				.limit(1)
-
-			const tokens = await tokensRaw.toArray()
-
-			// check lowest price from tokens
-			let newLowestPrice = tokens.length > 0 ? tokens[0].price.toString() : null
-
-			// check lowest price from token series
-			if (newLowestPrice) {
-				const tokenSeries = await db.root.collection('token_series').findOne({
-					contract_id: nft_contract_id,
-					token_series_id: token_series_id,
-				})
-
-				newLowestPrice = JSBI.lessThan(
-					JSBI.BigInt(tokenSeries.price.toString()),
-					JSBI.BigInt(newLowestPrice)
-				)
-					? tokenSeries.price.toString()
-					: newLowestPrice
-			}
-
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -981,9 +1027,6 @@ const processEvent = {
 				},
 				{
 					$set: {
-						lowest_price: newLowestPrice
-							? db.toDecimal128(newLowestPrice)
-							: null,
 						updated_at: new Date(msg.datetime).getTime(),
 					},
 				},
