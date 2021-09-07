@@ -68,7 +68,9 @@ const processEvent = {
 					token_series_id: payload.token_series_id,
 					creator_id: payload.creator_id,
 					price: payload.price,
-					lowest_price: db.toDecimal128(payload.price),
+					lowest_price: payload.price
+						? db.toDecimal128(payload.price)
+						: payload.price,
 					royalty: payload.royalty,
 					metadata: metadata,
 					in_circulation: 0,
