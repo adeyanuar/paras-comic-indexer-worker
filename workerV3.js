@@ -387,7 +387,8 @@ const processEvent = {
 				},
 			}
 
-			if (newLowestPrice) {
+			// if it is lower than current price
+			if (!newLowestPrice) {
 				updateParams.$set.lowest_price = parsedPrice
 			}
 
