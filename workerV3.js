@@ -6,6 +6,7 @@ const CID = require('cids')
 const Database = require('./helpers/Database')
 const nearApi = require('near-api-js')
 const nearConfig = require('./near.config.json')
+const { default: JSBI } = require('jsbi')
 
 if (!process.env.QUEUE_NAME || process.env.QUEUE_NAME === '') {
 	throw new Error('[env] QUEUE_NAME not found')
@@ -726,8 +727,18 @@ const processEvent = {
 
 			const tokens = await tokensRaw.toArray()
 
-			const newLowestPrice =
-				tokens.length > 0 ? tokens[0].price.toString() : null
+			// check lowest price from tokens
+			let newLowestPrice = tokens.length > 0 ? tokens[0].price.toString() : null
+
+			// check lowest price from token series
+			const tokenSeries = await db.root.collection('token_series').findOne({
+				contract_id: nft_contract_id,
+				token_series_id: token_series_id,
+			})
+			newLowestPrice = JSBI.lessThan(
+				JSBI.BigInt(tokenSeries.price),
+				JSBI.BigInt(newLowestPrice)
+			)
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -835,10 +846,20 @@ const processEvent = {
 
 			const tokens = await tokensRaw.toArray()
 
-			const newLowestPrice =
+			// check lowest price from tokens
+			let newLowestPrice =
 				tokens.length > 0 ? tokens[0].price.toString() : price
 
-			// throw new Error('asd')
+			// check lowest price from token series
+			const tokenSeries = await db.root.collection('token_series').findOne({
+				contract_id: nft_contract_id,
+				token_series_id: token_series_id,
+			})
+			newLowestPrice = JSBI.lessThan(
+				JSBI.BigInt(tokenSeries.price),
+				JSBI.BigInt(newLowestPrice)
+			)
+
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -910,6 +931,42 @@ const processEvent = {
 			} = msg.params
 			const [token_series_id, edition_id] = token_id.split(':')
 
+			// get new lowest price
+			const query = {
+				contract_id: nft_contract_id,
+				token_series_id: token_series_id,
+				token_id: {
+					$ne: token_id,
+				},
+				price: {
+					$ne: null,
+					$lt: db.toDecimal128(price),
+				},
+			}
+			const tokensRaw = await db.root
+				.collection('tokens')
+				.find(query)
+				.sort({ price: 1 })
+				.limit(1)
+
+			const tokens = await tokensRaw.toArray()
+
+			// check lowest price from tokens
+			let newLowestPrice = tokens.length > 0 ? tokens[0].price.toString() : null
+
+			// check lowest price from token series
+			if (newLowestPrice) {
+				const tokenSeries = await db.root.collection('token_series').findOne({
+					contract_id: nft_contract_id,
+					token_series_id: token_series_id,
+				})
+
+				newLowestPrice = JSBI.lessThan(
+					JSBI.BigInt(tokenSeries.price),
+					JSBI.BigInt(newLowestPrice)
+				)
+			}
+
 			// update token_series
 			await db.root.collection('token_series').findOneAndUpdate(
 				{
@@ -918,6 +975,9 @@ const processEvent = {
 				},
 				{
 					$set: {
+						lowest_price: newLowestPrice
+							? db.toDecimal128(newLowestPrice)
+							: null,
 						updated_at: new Date(msg.datetime).getTime(),
 					},
 				},
