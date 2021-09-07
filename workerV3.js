@@ -798,7 +798,7 @@ const processEvent = {
 
 			// check lowest price from secondary market
 			const secondaryLowestPrice =
-				tokens.length > 0 ? tokens[0].price.toString() : price
+				tokens.length > 0 ? tokens[0].price.toString() : null
 
 			// check lowest price from primary market
 			const tokenSeries = await db.root.collection('token_series').findOne({
