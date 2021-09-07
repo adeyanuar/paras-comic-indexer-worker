@@ -347,6 +347,9 @@ const processEvent = {
 			const query = {
 				contract_id: contract_id,
 				token_series_id: token_series_id,
+				token_id: {
+					$ne: payload.token_id,
+				},
 				price: {
 					$ne: null,
 				},
