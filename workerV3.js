@@ -6,7 +6,7 @@ const CID = require('cids')
 const Database = require('./helpers/Database')
 const nearApi = require('near-api-js')
 const nearConfig = require('./near.config.json')
-const { default: JSBI } = require('jsbi')
+const JSBI = require('jsbi')
 
 if (!process.env.QUEUE_NAME || process.env.QUEUE_NAME === '') {
 	throw new Error('[env] QUEUE_NAME not found')
@@ -736,9 +736,11 @@ const processEvent = {
 				token_series_id: token_series_id,
 			})
 			newLowestPrice = JSBI.lessThan(
-				JSBI.BigInt(tokenSeries.price),
+				JSBI.BigInt(tokenSeries.price.toString()),
 				JSBI.BigInt(newLowestPrice)
 			)
+				? tokenSeries.price.toString()
+				: newLowestPrice
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -856,9 +858,11 @@ const processEvent = {
 				token_series_id: token_series_id,
 			})
 			newLowestPrice = JSBI.lessThan(
-				JSBI.BigInt(tokenSeries.price),
+				JSBI.BigInt(tokenSeries.price.toString()),
 				JSBI.BigInt(newLowestPrice)
 			)
+				? tokenSeries.price.toString()
+				: newLowestPrice
 
 			// update the lowest price
 			await db.root.collection('token_series').findOneAndUpdate(
@@ -962,9 +966,11 @@ const processEvent = {
 				})
 
 				newLowestPrice = JSBI.lessThan(
-					JSBI.BigInt(tokenSeries.price),
+					JSBI.BigInt(tokenSeries.price.toString()),
 					JSBI.BigInt(newLowestPrice)
 				)
+					? tokenSeries.price.toString()
+					: newLowestPrice
 			}
 
 			// update token_series
