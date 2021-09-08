@@ -105,6 +105,7 @@ const processEvent = {
 	},
 	nft_transfer: async (db, session, msg) => {
 		const contract_id = msg.contract_id
+		let isNonMintable = false
 
 		try {
 			const payload = msg.params
@@ -176,6 +177,7 @@ const processEvent = {
 						},
 					}
 					if (parseInt(metadata.copies) === parseInt(edition_id)) {
+						isNonMintable = true
 						updateParams.$set = {
 							is_non_mintable: true,
 							price: null,
@@ -375,9 +377,11 @@ const processEvent = {
 				token_series_id: token_series_id,
 			})
 
-			const primaryPrice = tokenSeries.price
-				? tokenSeries.price.toString()
-				: null
+			// check the current primary price and if this is the last primary sales
+			const primaryPrice =
+				tokenSeries.price && !isNonMintable
+					? tokenSeries.price.toString()
+					: null
 
 			const newLowestPrice =
 				secondaryLowestPrice && primaryPrice
