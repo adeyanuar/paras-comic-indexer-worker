@@ -7,6 +7,7 @@ const Database = require('./helpers/Database')
 const nearApi = require('near-api-js')
 const nearConfig = require('./near.config.json')
 const JSBI = require('jsbi')
+const { setLastUpdate } = require('./last-update');
 
 if (!process.env.QUEUE_NAME || process.env.QUEUE_NAME === '') {
 	throw new Error('[env] QUEUE_NAME not found')
@@ -1179,6 +1180,7 @@ const processQueue = async (db, next, close, msg) => {
 					)}`
 				)
 				await processEvent[formatEvent.event_type](db, session, formatEvent)
+				setLastUpdate(formatEvent.event_type, Math.floor(+new Date() / 1000))
 			}
 		}
 
