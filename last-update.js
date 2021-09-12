@@ -1,7 +1,7 @@
 let lastUpdate = {}
 
 const setLastUpdate = (key, value) => {
-	lastUpdate[key] = value;
+    lastUpdate[key] = value;
 }
 
 const getLastUpdate = () => {
@@ -9,6 +9,6 @@ const getLastUpdate = () => {
 };
 
 module.exports = {
-	setLastUpdate,
+    setLastUpdate,
     getLastUpdate,
 }
